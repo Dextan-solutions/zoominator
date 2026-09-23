@@ -31,6 +31,7 @@ void signal_handler_disconnect(struct signal_handler *handler, const char *signa
 #include <QMetaObject>
 #include <QPushButton>
 #include <QScreen>
+#include <QScrollArea>
 #include <QSet>
 #include <QSpinBox>
 #include <QTabWidget>
@@ -56,6 +57,16 @@ static QWidget *mkField(const QString &labelText, QWidget *input)
 	v->addWidget(lbl);
 	v->addWidget(input);
 	return container;
+}
+
+static QScrollArea *wrapScrollable(QWidget *page)
+{
+	auto *scroll = new QScrollArea;
+	scroll->setWidget(page);
+	scroll->setWidgetResizable(true);
+	scroll->setFrameShape(QFrame::NoFrame);
+	scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+	return scroll;
 }
 
 static void addSection(QVBoxLayout *lay, const QString &title, bool firstSection = false)
@@ -122,9 +133,17 @@ ZoominatorDialog::ZoominatorDialog(QWidget *parent) : QDialog(parent)
 {
 	setWindowTitle(T("Zoominator"));
 	setModal(false);
-	resize(620, 560);
 
 	buildUi();
+
+	int width = 620;
+	int height = 560;
+	if (QScreen *screen = QGuiApplication::primaryScreen()) {
+		const QRect avail = screen->availableGeometry();
+		width = std::min(width, avail.width() - 40);
+		height = std::min(height, avail.height() - 40);
+	}
+	resize(width, height);
 
 	obs_frontend_add_event_callback(frontend_event_cb, this);
 
@@ -204,7 +223,7 @@ void ZoominatorDialog::buildUi()
 		supportLabel->setWordWrap(true);
 		lay->addWidget(supportLabel);
 
-		tabWidget->addTab(page, T("Dialog.Tab.Target"));
+		tabWidget->addTab(wrapScrollable(page), T("Dialog.Tab.Target"));
 	}
 
 	{
@@ -293,7 +312,7 @@ void ZoominatorDialog::buildUi()
 		lay->addWidget(rowModifiersWidget);
 
 		lay->addStretch(1);
-		tabWidget->addTab(page, T("Dialog.Tab.Trigger"));
+		tabWidget->addTab(wrapScrollable(page), T("Dialog.Tab.Trigger"));
 
 		connect(cmbTrigger, &QComboBox::currentIndexChanged, this, [this](int) {
 			const bool isMouse = (cmbTrigger->currentData().toString() == "mouse");
@@ -471,7 +490,7 @@ void ZoominatorDialog::buildUi()
 		lay->addWidget(chkDebug);
 
 		lay->addStretch(1);
-		tabWidget->addTab(page, T("Dialog.Tab.Advanced"));
+		tabWidget->addTab(wrapScrollable(page), T("Dialog.Tab.Advanced"));
 	}
 
 	{
