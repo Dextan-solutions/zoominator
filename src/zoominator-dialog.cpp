@@ -140,8 +140,8 @@ ZoominatorDialog::ZoominatorDialog(QWidget *parent) : QDialog(parent)
 	int height = 560;
 	if (QScreen *screen = QGuiApplication::primaryScreen()) {
 		const QRect avail = screen->availableGeometry();
-		width = std::min(width, avail.width() - 40);
-		height = std::min(height, avail.height() - 40);
+		width = (std::min)(width, avail.width() - 40);
+		height = (std::min)(height, avail.height() - 40);
 	}
 	resize(width, height);
 
